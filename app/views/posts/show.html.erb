@@ -1,1 +1,31 @@
+<h1><%= @post.title %></h1>
+<p><%= @post.content %></p>
 
+<% @post.categories.each do |category| %>
+  <p><%= category.name%></p>
+<% end %>
+
+<% @unique_users = @post.comments.includes(:user).map(&:user).uniq %>
+<% @unique_users.each do |user| %>
+  <p><%= link_to user.username, user_path(user) %> says:
+  <% first_comment = @post.comments.find_by(user: user) %>
+  <%= first_comment.content if first_comment %></p>
+<% end %>
+
+<%= form_for @comment do |f| %>
+  <%= f.label :content, "Add a Comment:" %><br>
+  <%= f.text_area :content %><br>
+
+  <%= f.label :user_id, "Select a User:" %><br>
+
+  <%= f.collection_select :user_id, @users, :id, :username, include_blank: "Create a new user" %><br>
+
+  <%= f.fields_for :user, User.new do |user_fields| %>
+    <%= user_fields.label :username, "New User Name:" %><br>
+    <%= user_fields.text_field :username %><br>
+  <% end %>
+
+  <%= f.hidden_field :post_id, value: @comment.post_id %>
+
+  <%= f.submit "Create Comment" %>
+<% end %>
